@@ -14,6 +14,13 @@ Hello from another thread!
 This is my thread id: ThreadId(
 */
 fn main() {
+    /*
+     * This is shorthand for
+     * std::thread::Builder::new().spawn().unwrap(),
+     * which returns std::io::Result.
+     * The error may be caused by OOM, resource limits, etc.
+     * thread::spawn() simply panics in that case.
+     */
     let t1 = thread::spawn(f);
     let t2 = thread::spawn(f);
 
