@@ -17,7 +17,7 @@ fn main() {
     let t1 = thread::spawn(f);
     let t2 = thread::spawn(f);
 
-    /**
+    /*
      * The println macro uses std::io::Stdout::lock()
      * to make sure its output does not get interrupted.
      */
