@@ -4,6 +4,8 @@ fn main() {
     let numbers = vec![1, 2, 3];
     // let mut numbers = vec![1, 2, 3];
     // the above line results in compile error: cannot borrow `numbers` as mutable
+
+    // thread::scope was added in Rust 1.63
     thread::scope(|s| {
         s.spawn(|| {
             // numbers.push(1);
