@@ -1,5 +1,6 @@
 use std::thread;
 use std::rc::Rc;
+use std::sync::Arc;
 fn main() {
     static X: &'static [i32; 3] = &[1, 2, 3];
 
@@ -21,4 +22,12 @@ fn main() {
 
     // thread::spawn(move || dbg!(b));
     // compile error: Rc cannot be sent between threads safely
+
+    // use std::sync::Arc, atomically reference counted, instead
+    let a = Arc::new([1, 2, 3]); // count starts at 1
+    let b = a.clone(); // increment to 2 but the same allocation
+
+    thread::spawn(move || dbg!(a));
+    thread::spawn(move || dbg!(b));
+    // last thread to drop Arc will drop and deallocate the array
 }
