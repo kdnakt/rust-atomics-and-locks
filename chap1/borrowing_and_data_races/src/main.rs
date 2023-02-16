@@ -7,6 +7,9 @@ fn main() {
     let a = [123, 456, 789];
     let b = unsafe { a.get_unchecked(index) };
     println!("{:?} {b}", a); // [123, 456, 789] 1829694064
+
+    // println!("{}", a[3]);
+    // compile error: index out of bounds
 }
 
 fn f(a: &i32, b: &mut i32) {
