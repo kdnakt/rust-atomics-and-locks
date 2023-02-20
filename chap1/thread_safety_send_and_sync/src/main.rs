@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 use std::cell::Cell;
+use std::thread;
+use std::rc::Rc;
 
 #[derive(Debug)]
 struct X { // not sync
@@ -29,4 +31,11 @@ fn main() {
         p: &mut 1,
     };
     println!("{:?}", y);
+
+    // Compiler will stop if you try to move something not `Send` into another thread
+    let a = Rc::new(123);
+    // thread::spawn(move || {
+    //     dbg!(a);
+    // });
+    // -> error[E0277]: `Rc<i32>` cannot be sent between threads safely
 }
