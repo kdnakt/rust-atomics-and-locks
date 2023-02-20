@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 use std::cell::Cell;
 use std::thread;
 use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Debug)]
 struct X { // not sync
@@ -38,4 +39,10 @@ fn main() {
     //     dbg!(a);
     // });
     // -> error[E0277]: `Rc<i32>` cannot be sent between threads safely
+
+    // Arc is Send, okay to send into a new thread
+    let b = Arc::new(456);
+    thread::spawn(move || {
+        dbg!(b);
+    }).join();
 }
