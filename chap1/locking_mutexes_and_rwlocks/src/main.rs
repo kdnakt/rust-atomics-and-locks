@@ -15,6 +15,7 @@ fn main() {
             });
         }
     });
+    // into_inner(): safely remove the protection, take ownership of the mutext
     let unwrapped = n.into_inner().unwrap();
     println!("{}", unwrapped);
     assert_eq!(unwrapped, 1000);
