@@ -1,5 +1,6 @@
 use std::sync::Mutex;
 use std::thread;
+use std::time::Duration;
 
 fn main() {
     println!("Hello, world!");
@@ -12,6 +13,7 @@ fn main() {
                 for _ in 0..100 {
                     *guard += 1;
                 }
+                thread::sleep(Duration::from_secs(1)); // New!
             });
         }
     });
