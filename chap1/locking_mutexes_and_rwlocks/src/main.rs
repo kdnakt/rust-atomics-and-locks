@@ -13,11 +13,12 @@ fn main() {
                 for _ in 0..100 {
                     *guard += 1;
                 }
-                thread::sleep(Duration::from_secs(1)); // New!
+                drop(guard); // Drop the guard before sleeping, whole program takes about 1 sec.
+                thread::sleep(Duration::from_secs(1));
             });
         }
     });
-    // into_inner(): safely remove the protection, take ownership of the mutext
+    // into_inner(): safely remove the protection, take ownership of the mutex
     let unwrapped = n.into_inner().unwrap();
     println!("{}", unwrapped);
     assert_eq!(unwrapped, 1000);
