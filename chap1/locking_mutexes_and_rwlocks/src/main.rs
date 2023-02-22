@@ -35,4 +35,10 @@ fn main() {
     if let Some(item) = list.lock().unwrap().pop() {
         println!("{item}");
     }; // MutexGuard is unlocked here, at the end of the if let statement
+
+    // if statement is a plain boolean, so cannot borrow anything
+    if list.lock().unwrap().pop() == Some(3) { // unlocked here, before the body of if statement.
+        println!("Got 3.");
+    }
+
 }
