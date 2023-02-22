@@ -41,4 +41,8 @@ fn main() {
         println!("Got 3.");
     }
 
+    let item = list.lock().unwrap().pop(); // the guard is dropped here
+    if let Some(item) = item {
+        println!("{item}");
+    }
 }
