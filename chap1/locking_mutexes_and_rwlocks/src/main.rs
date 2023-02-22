@@ -9,7 +9,11 @@ fn main() {
     thread::scope(|s| {
         for _ in 0..10 {
             s.spawn(|| {
-                let mut guard = n.lock().unwrap();
+                let mut guard = n.lock()
+                    // unwrap() calls relate to lock poisoning
+                    // if a thread panics, mutex gets marked as poisoned
+                    // and lock() will return Err
+                    .unwrap();
                 for _ in 0..100 {
                     *guard += 1;
                 }
