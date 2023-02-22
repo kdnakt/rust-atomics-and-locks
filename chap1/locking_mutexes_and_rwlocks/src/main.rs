@@ -31,4 +31,8 @@ fn main() {
     // lock, push, unlock in a single statement
     list.lock().unwrap().push(1);
     println!("{:?}", list);
+
+    if let Some(item) = list.lock().unwrap().pop() {
+        println!("{item}");
+    }; // MutexGuard is unlocked here, at the end of the if let statement
 }
