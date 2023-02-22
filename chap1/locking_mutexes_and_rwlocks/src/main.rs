@@ -26,4 +26,9 @@ fn main() {
     let unwrapped = n.into_inner().unwrap();
     println!("{}", unwrapped);
     assert_eq!(unwrapped, 1000);
+
+    let list = Mutex::new(vec![1, 2, 3]);
+    // lock, push, unlock in a single statement
+    list.lock().unwrap().push(1);
+    println!("{:?}", list);
 }
