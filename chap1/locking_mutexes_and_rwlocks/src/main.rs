@@ -9,6 +9,12 @@ fn main() {
     thread::scope(|s| {
         for _ in 0..10 {
             s.spawn(|| {
+                // MutexGuard will provide us an exclusive reference (&mut T) to protect the data
+                // If you want shared reference (&T), use std::sync::RwLock<T>,
+                // which has read() and write() method for locking.
+                // RwLock is the multi-threaded version of RefCell.
+                // Both Mutex<T> and RwLock<T> requires T to be Send,
+                // and RwLock<T> additionally requires T to implement Sync for shared reference.
                 let mut guard = n.lock()
                     // unwrap() calls relate to lock poisoning
                     // if a thread panics, mutex gets marked as poisoned
