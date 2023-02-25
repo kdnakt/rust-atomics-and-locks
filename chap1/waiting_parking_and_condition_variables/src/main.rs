@@ -16,6 +16,8 @@ fn main() {
                 // sleep, stop consuming any CPU cycles
                 // returns when it gets unparked
                 thread::park();
+                // IMPORTANT: park() does not guarantee
+                // that it will only return because of a matching unpark()
             }
         });
 
@@ -25,6 +27,9 @@ fn main() {
             queue.lock().unwrap().push_back(i);
             // unpark the parked thread, waking it up
             t.thread().unpark();
+            // if unpark() called before park(), park() will handle it without sleep.
+            // However, unpark requests don't stack up: first park() clears the request
+            // So we only park the thread if the queue is empty
             thread::sleep(Duration::from_secs(1));
         }
     });
