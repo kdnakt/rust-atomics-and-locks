@@ -6,6 +6,8 @@ use std::sync::Condvar;
 
 fn main() {
     let queue = Mutex::new(VecDeque::new());
+    // takes care of delivering the notifications to threads
+    // IMPORTANT: Condvar is only used with a single Mutex, two different mutexes might cause panic
     let not_empty = Condvar::new();
 
     thread::scope(|s| {
@@ -18,7 +20,9 @@ fn main() {
                     if let Some(item) = q.pop_front() {
                         break item;
                     } else {
+                        // wait() takes MutexGuard: first unlocks it and wait, then relocks with a new MutexGuard
                         q = not_empty.wait(q).unwrap();
+                        // Also we have Condvar::wait_timeout(Duration)
                     }
                 };
                 drop(q);
@@ -31,6 +35,7 @@ fn main() {
                 //     thread::park();
                 //     // IMPORTANT: park() does not guarantee
                 //     // that it will only return because of a matching unpark()
+                //      We also have thread::park_timeout(Duration)
                 // }
             }
         });
@@ -39,6 +44,7 @@ fn main() {
         for i in 0.. {
             queue.lock().unwrap().push_back(i);
             queue.lock().unwrap().push_back(i);
+            // No need to know which thread to wake up
             not_empty.notify_one();
             // // unpark the parked thread, waking it up
             // t.thread().unpark();
