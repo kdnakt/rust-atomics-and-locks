@@ -2,6 +2,7 @@ use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering::Relaxed;
 use std::thread;
 use std::time::Duration;
+use std::sync::Once;
 
 fn calculate_x() -> u64 {
     thread::sleep(Duration::from_secs(3));
@@ -9,14 +10,16 @@ fn calculate_x() -> u64 {
     3
 }
 
+static mut X: u64 = 0;
+static INIT: Once = Once::new();
+
 fn get_x() -> u64 {
-    static X: AtomicU64 = AtomicU64::new(0);
-    let mut x = X.load(Relaxed);
-    if x == 0 {
-        x = calculate_x();
-        X.store(x, Relaxed);
+    unsafe {
+        INIT.call_once(|| {
+            X = calculate_x();
+        });
+        X
     }
-    x
 }
 
 fn main() {
