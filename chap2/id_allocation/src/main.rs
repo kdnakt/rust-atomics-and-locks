@@ -8,7 +8,12 @@ static NEXT_ID: AtomicU32 = AtomicU32::new(0);
 
 fn allocate_new_id() -> u32 {
     let id = NEXT_ID.fetch_add(1, Relaxed);
-    assert!(id < 1000, "too many IDs!");
+    // problematic
+    // assert!(id < 1000, "too many IDs!");
+    if id >= 1000 {
+        NEXT_ID.fetch_sub(1, Relaxed);
+        panic!("too many IDs!");
+    }
     id
 }
 
