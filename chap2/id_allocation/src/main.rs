@@ -19,6 +19,7 @@ fn allocate_new_id() -> u32 {
     // use compare and exchange
     let mut id = NEXT_ID.load(Relaxed);
     loop {
+        // if we want, u32::MAX, without having to worry about edge cases
         assert!(id < 1000, "too many IDs!");
         match NEXT_ID.compare_exchange_weak(id, id + 1, Relaxed, Relaxed) {
             Ok(_) => return id,
