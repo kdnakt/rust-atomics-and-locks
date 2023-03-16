@@ -17,6 +17,8 @@ fn b() {
     let c = X.load(Relaxed);
     let d = X.load(Relaxed);
     println!("{a} {b} {c} {d}");
+    // threads can't observe the result inconsistent with total modification order, defined in a()
+    // 0 0 5 15 is possible but 0 5 0 15 is impossible
 }
 
 fn main() {
