@@ -24,5 +24,6 @@ fn main() {
         thread::sleep(Duration::from_millis(100));
         println!("waiting...");
     }
+    // If we use Relaxed for READY, the main thread may load a zero from DATA.
     println!("{}", DATA.load(Relaxed));
 }
