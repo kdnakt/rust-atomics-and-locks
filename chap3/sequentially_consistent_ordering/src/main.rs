@@ -28,4 +28,6 @@ fn main() {
 
     a.join().unwrap();
     b.join().unwrap();
+
+    unsafe { println!("{}", S) };
 }
