@@ -3,6 +3,7 @@ use std::sync::atomic::{
     Ordering::{
         Acquire,
         Release,
+        Relaxed,
     },
 };
 
@@ -16,7 +17,11 @@ impl SpinLock {
     }
 
     pub fn lock(&self) {
-        while self.locked.swap(true, Acquire) {
+        // while self.locked.swap(true, Acquire) {
+        // or we can use compare-and-exchange
+        while self.locked.compare_exchange_weak(
+            false, true, Acquire, Relaxed
+        ).is_err() {
             std::hint::spin_loop();
         }
     }
