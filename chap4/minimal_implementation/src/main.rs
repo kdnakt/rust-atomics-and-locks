@@ -22,6 +22,9 @@ impl SpinLock {
         while self.locked.compare_exchange_weak(
             false, true, Acquire, Relaxed
         ).is_err() {
+            // this hint results in a special instruction
+            // that causes the processor core to optimize.
+            // it might temporarily slow down or prioritize other useful things
             std::hint::spin_loop();
         }
     }
