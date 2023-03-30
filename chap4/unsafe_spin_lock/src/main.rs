@@ -1,6 +1,7 @@
 use std::cell::UnsafeCell;
 use std::sync::atomic::{
     AtomicBool,
+    Ordering::Acquire,
 };
 
 pub struct SpinLock<T> {
@@ -20,6 +21,12 @@ impl<T> SpinLock<T> {
             locked: AtomicBool::new(false),
             value: UnsafeCell::new(value),
         }
+    }
+    pub fn lock(&self) -> &mut T {
+        while self.locked.swap(true, Acquire) {
+            std::hint::spin_loop();
+        }
+        unsafe { &mut *self.value.get() }
     }
 }
 
