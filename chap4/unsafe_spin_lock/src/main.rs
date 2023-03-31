@@ -28,11 +28,11 @@ impl<T> SpinLock<T> {
     // we can make the lifetimes explicit
     // like: pub fn lock<'a>(&'a self) -> &'a mut T { ... }
     // the returned reference is valid as long as the lock exists.
-    pub fn lock(&self) -> &mut T {
+    pub fn lock(&self) -> Guard<T> {
         while self.locked.swap(true, Acquire) {
             std::hint::spin_loop();
         }
-        unsafe { &mut *self.value.get() }
+        Guard { lock: self }
     }
     // Safety: The &mut T from lock() must be gone!
     // And no cheating by keeping reference to fields of that T around!
