@@ -41,6 +41,11 @@ impl<T> SpinLock<T> {
     }
 }
 
+// We need to tie the unlocking operation to the end of the &mut T
+pub struct Guard<'a, T> {
+    lock: &'a SpinLock<T>,
+}
+
 fn main() {
     println!("Hello, world!");
 }
