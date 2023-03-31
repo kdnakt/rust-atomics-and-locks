@@ -36,7 +36,7 @@ impl<T> SpinLock<T> {
     }
     // Safety: The &mut T from lock() must be gone!
     // And no cheating by keeping reference to fields of that T around!
-    pub fn unsafe fn unlock(&self) {
+    pub unsafe fn unlock(&self) {
         self.locked.store(false, Release);
     }
 }
