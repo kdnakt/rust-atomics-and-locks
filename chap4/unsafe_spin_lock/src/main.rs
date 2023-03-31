@@ -22,6 +22,8 @@ impl<T> SpinLock<T> {
             value: UnsafeCell::new(value),
         }
     }
+    // we can make the lifetimes explicit
+    // like: pub fn lock<'a>(&'a self) -> &'a mut T { ... }
     pub fn lock(&self) -> &mut T {
         while self.locked.swap(true, Acquire) {
             std::hint::spin_loop();
