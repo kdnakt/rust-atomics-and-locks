@@ -1,7 +1,10 @@
 use std::cell::UnsafeCell;
 use std::sync::atomic::{
     AtomicBool,
-    Ordering::Acquire,
+    Ordering::{
+        Acquire,
+        Release,
+    },
 };
 
 pub struct SpinLock<T> {
@@ -30,6 +33,11 @@ impl<T> SpinLock<T> {
             std::hint::spin_loop();
         }
         unsafe { &mut *self.value.get() }
+    }
+    // Safety: The &mut T from lock() must be gone!
+    // And no cheating by keeping reference to fields of that T around!
+    pub fn unsafe fn unlock(&self) {
+        self.locked.store(false, Release);
     }
 }
 
