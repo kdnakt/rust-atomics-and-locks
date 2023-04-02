@@ -6,6 +6,10 @@ use std::sync::atomic::{
         Release,
     },
 };
+use std::ops::{
+    Deref,
+    DerefMut,
+};
 
 pub struct SpinLock<T> {
     locked: AtomicBool,
@@ -44,6 +48,25 @@ impl<T> SpinLock<T> {
 // We need to tie the unlocking operation to the end of the &mut T
 pub struct Guard<'a, T> {
     lock: &'a SpinLock<T>,
+}
+
+// to make Guard<T> behave like an (exclusive) reference
+// that is, transparently give access to T
+impl<T> Deref for Guard<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        // Safety: the very existence of this Guard
+        // guarantees we've exclusively locked the lock
+        unsafe { &*self.lock.value.get() }
+    }
+}
+
+impl<T> DerefMut for Guard<'_, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        // Safety: the very existence of this Guard
+        // guarantees we've exclusively locked the lock
+        unsafe { &mut *self.lock.value.get() }
+    }
 }
 
 fn main() {
