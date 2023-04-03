@@ -69,6 +69,12 @@ impl<T> DerefMut for Guard<'_, T> {
     }
 }
 
+impl<T> Drop for Guard<'_, T> {
+    fn drop(&mut self) {
+        self.lock.locked.store(false, Release);
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
