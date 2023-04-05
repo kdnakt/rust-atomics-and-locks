@@ -85,6 +85,8 @@ fn main() {
         s.spawn(|| {
             let mut g = x.lock();
             g.push(2);
+            // Unlock like this will cause a compiler error
+            // drop(g);
             g.push(2);
         });
     });
