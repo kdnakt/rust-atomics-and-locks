@@ -1,8 +1,9 @@
 use std::sync::{
-    Condvar,
+    Mutex,
     Condvar,
 };
 use std::collections::VecDeque;
+use std::thread;
 
 pub struct Channel<T> {
     queue: Mutex<VecDeque<T>>,
@@ -35,4 +36,22 @@ impl <T> Channel<T> {
 
 fn main() {
     println!("Hello, world!");
+
+    let channel: Channel<i32> = Channel::new();
+    thread::scope(|s| {
+        s.spawn(|| {
+            println!("Sending 1");
+            channel.send(1);
+            println!("Sent 1, Sending 2");
+            channel.send(2);
+            println!("Sent 2");
+        });
+        s.spawn(|| {
+            println!("Waiting");
+            println!("Receiving {}", channel.receive());
+            println!("Receiving {}", channel.receive());
+            println!("end of thread");
+        });
+    });
+    println!("Done.");
 }
