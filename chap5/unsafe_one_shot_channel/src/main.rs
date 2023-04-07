@@ -11,6 +11,15 @@ pub struct Channel<T> {
 unsafe impl<T> Sync for Channel<T>
     where T: Send {}
 
+impl <T> Channel<T> {
+    pub const fn new() -> Self {
+        Self {
+            message: UnsafeCell::new(MaybeUninit::uninit()),
+            ready: AtomicBool::new(false),
+        }
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
