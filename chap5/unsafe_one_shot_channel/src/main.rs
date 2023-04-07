@@ -8,6 +8,9 @@ pub struct Channel<T> {
     ready: AtomicBool,
 }
 
+unsafe impl<T> Sync for Channel<T>
+    where T: Send {}
+
 fn main() {
     println!("Hello, world!");
 }
