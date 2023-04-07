@@ -22,6 +22,7 @@ impl <T> Channel<T> {
         }
     }
 
+    // Safety: only call this once!
     pub unsafe fn send(&self, message: T) {
         (*self.message.get()).write(message);
         self.ready.store(true, Release);
