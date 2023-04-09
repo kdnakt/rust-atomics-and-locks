@@ -26,6 +26,8 @@ impl <T> Channel<T> {
     pub unsafe fn send(&self, message: T) {
         (*self.message.get()).write(message);
         self.ready.store(true, Release);
+        // this releases the message to the receiver
+        // receiver will loads with Acquire ordering
     }
 }
 
