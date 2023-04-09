@@ -3,7 +3,10 @@ use std::mem::MaybeUninit;
 use std::cell::UnsafeCell;
 use std::sync::atomic::{
     AtomicBool,
-    Ordering::Release,
+    Ordering::{
+        Release,
+        Acquire,
+    },
 };
 
 pub struct Channel<T> {
@@ -28,6 +31,10 @@ impl <T> Channel<T> {
         self.ready.store(true, Release);
         // this releases the message to the receiver
         // receiver will loads with Acquire ordering
+    }
+
+    pub fn is_ready(&self) -> bool {
+        self.ready.load(Acquire)
     }
 }
 
