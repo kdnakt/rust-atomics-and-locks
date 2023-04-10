@@ -10,6 +10,7 @@ use std::sync::atomic::{
 };
 
 pub struct Channel<T> {
+    // MaybeUninit will not automatically drop its contents
     message: UnsafeCell<MaybeUninit<T>>,
     ready: AtomicBool,
 }
@@ -35,6 +36,12 @@ impl <T> Channel<T> {
 
     pub fn is_ready(&self) -> bool {
         self.ready.load(Acquire)
+    }
+
+    // Safety: Only call this once
+    // and only after is_ready() returns true!
+    pub unsafe fn receive(&self) -> T {
+        (*self.message.get()).assume_init_read()
     }
 }
 
