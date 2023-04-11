@@ -35,7 +35,8 @@ impl <T> Channel<T> {
     }
 
     pub fn is_ready(&self) -> bool {
-        self.ready.load(Acquire)
+        // now we have acquire-load of the flag in receive()
+        self.ready.load(Relaxed)
     }
 
     /// Panics if no message is available yet.
