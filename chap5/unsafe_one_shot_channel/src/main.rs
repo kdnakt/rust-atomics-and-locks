@@ -38,9 +38,15 @@ impl <T> Channel<T> {
         self.ready.load(Acquire)
     }
 
-    // Safety: Only call this once
-    // and only after is_ready() returns true!
+    /// Panics if no message is available yet.
+    ///
+    /// Tip: Use `is_ready` to check first.
+    ///
+    /// Safety: Only call this once
     pub unsafe fn receive(&self) -> T {
+        if !self.ready.load(Acquire) {
+            panic!("no message available!");
+        }
         (*self.message.get()).assume_init_read()
     }
 }
