@@ -12,6 +12,8 @@ use std::sync::atomic::{
 pub struct Channel<T> {
     // MaybeUninit will not automatically drop its contents
     message: UnsafeCell<MaybeUninit<T>>,
+    // To indicate whether the channel has been taken in use
+    in_use: AtomicBool,
     ready: AtomicBool,
 }
 
@@ -22,6 +24,7 @@ impl <T> Channel<T> {
     pub const fn new() -> Self {
         Self {
             message: UnsafeCell::new(MaybeUninit::uninit()),
+            in_use: AtomicBool::new(false),
             ready: AtomicBool::new(false),
         }
     }
