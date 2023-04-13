@@ -59,6 +59,14 @@ impl <T> Channel<T> {
     }
 }
 
+impl<T> Drop for Channel<T> {
+    fn drop(&mut self) {
+        if *self.ready.get_mut() {
+            unsafe { self.message.get_mut().assume_init_drop() }
+        }
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
