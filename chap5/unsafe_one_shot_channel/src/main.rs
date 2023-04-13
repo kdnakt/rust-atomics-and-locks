@@ -6,6 +6,7 @@ use std::sync::atomic::{
     Ordering::{
         Release,
         Acquire,
+        Relaxed,
     },
 };
 
@@ -29,9 +30,12 @@ impl <T> Channel<T> {
         }
     }
 
-    // Safety: only call this once!
-    pub unsafe fn send(&self, message: T) {
-        (*self.message.get()).write(message);
+    /// Panics when trying to send more than one message.
+    pub fn send(&self, message: T) {
+        if self.in_use.swap(true, Relaxed) {
+            panic!("can't send more than one message!");
+        }
+        unsafe { (*self.message.get()).write(message) };
         self.ready.store(true, Release);
         // this releases the message to the receiver
         // receiver will loads with Acquire ordering
