@@ -9,6 +9,7 @@ use std::sync::atomic::{
         Relaxed,
     },
 };
+use std::thread;
 
 pub struct Channel<T> {
     // MaybeUninit will not automatically drop its contents
@@ -69,4 +70,19 @@ impl<T> Drop for Channel<T> {
 
 fn main() {
     println!("Hello, world!");
+
+    let channel = Channel::new();
+    let t = thread::current();
+    thread::scope(|s| {
+        s.spawn(|| {
+            channel.send("hello world!");
+            t.unpark();
+        });
+        while !channel.is_ready() {
+            thread::park();
+        }
+        let s = channel.receive();
+        assert_eq!(s, "hello world!");
+        println!("got: {:?}", s);
+    });
 }
