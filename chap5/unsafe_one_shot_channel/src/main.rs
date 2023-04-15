@@ -77,6 +77,7 @@ fn main() {
         s.spawn(|| {
             channel.send("hello world!");
             // below line will cause panic message!
+            // but it's far better than undefined behavior
             // channel.send("hello world!");
             t.unpark();
         });
