@@ -76,6 +76,8 @@ fn main() {
     thread::scope(|s| {
         s.spawn(|| {
             channel.send("hello world!");
+            // below line will cause panic message!
+            // channel.send("hello world!");
             t.unpark();
         });
         while !channel.is_ready() {
