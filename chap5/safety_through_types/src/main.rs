@@ -1,6 +1,13 @@
 use std::sync::{
     Arc,
-    atomic::AtomicBool,
+    atomic::{
+        AtomicBool,
+        Ordering::{
+            Acquire,
+            Release,
+            Relaxed,
+        },
+    },
 };
 use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
@@ -9,8 +16,29 @@ pub struct Sender<T> {
     channel: Arc<Channel<T>>,
 }
 
+impl<T> Sender<T> {
+    /// This never panics
+    pub fn send(self, message: T) {
+        unsafe {(*self.channel.message.get()).write(message) };
+        self.channel.ready.store(true, Release);
+    }
+}
+
 pub struct Receiver<T> {
     channel: Arc<Channel<T>>,
+}
+
+impl<T> Receiver<T> {
+    pub fn is_ready(&self) -> bool {
+        self.channel.ready.load(Relaxed)
+    }
+
+    pub fn receive(self) -> T {
+        if !self.channel.ready.swap(false, Acquire) {
+            panic!("no message available");
+        }
+        unsafe { (*self.channel.message.get()).assume_init_read() }
+    }
 }
 
 // no longer `pub`
