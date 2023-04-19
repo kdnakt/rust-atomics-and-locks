@@ -2,7 +2,7 @@ use std::sync::{
     Arc,
     atomic::AtomicBool,
 };
-use std::cell:UnsafeCell;
+use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
 
 pub struct Sender<T> {
@@ -23,10 +23,10 @@ struct Channel<T> {
 unsafe impl<T> Sync for Channel<T>
     where T: Send {}
 
-pub fn channel<T> -> (Sender<T>, Receiver<T>) {
+pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
     let a = Arc::new(Channel {
-        message: UnsafeCell::new(MaybeUninit::uninit()).
-        ready:: AtomicBool::new(false),
+        message: UnsafeCell::new(MaybeUninit::uninit()),
+        ready: AtomicBool::new(false),
     });
     (Sender { channel: a.clone() }, Receiver { channel: a })
 }
