@@ -51,6 +51,16 @@ struct Channel<T> {
 unsafe impl<T> Sync for Channel<T>
     where T: Send {}
 
+impl<T> Drop for Channel<T> {
+    fn drop(&mut self) {
+        if *self.ready.get_mut() {
+            unsafe {
+                self.message.get_mut().assume_init_drop()
+            }
+        }
+    }
+}
+
 pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
     let a = Arc::new(Channel {
         message: UnsafeCell::new(MaybeUninit::uninit()),
