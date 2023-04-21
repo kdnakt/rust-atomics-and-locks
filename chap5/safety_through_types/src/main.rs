@@ -78,6 +78,9 @@ fn main() {
         let t = thread::current();
         s.spawn(move || {
             sender.send(format!("hello world! {:?}", thread::current().id()));
+            // below line will result in a compilation error
+            // error[E0382]: use of moved value: `sender`
+            // sender.send(format!("hello world! {:?}", thread::current().id()));
             t.unpark();
         });
         while !receiver.is_ready() {
