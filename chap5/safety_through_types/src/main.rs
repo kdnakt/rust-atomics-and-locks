@@ -11,6 +11,7 @@ use std::sync::{
 };
 use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
+use std::thread;
 
 pub struct Sender<T> {
     channel: Arc<Channel<T>>,
@@ -71,4 +72,19 @@ pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
 
 fn main() {
     println!("Hello, world!");
+
+    thread::scope(|s| {
+        let (sender, receiver) = channel();
+        let t = thread::current();
+        s.spawn(move || {
+            sender.send(format!("hello world! {:?}", thread::current().id()));
+            t.unpark();
+        });
+        while !receiver.is_ready() {
+            thread::park();
+        }
+        let received = receiver.receive();
+        assert_eq!(received, "hello world! ThreadId(2)");
+        println!("got: {}", received);
+    });
 }
