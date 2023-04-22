@@ -7,6 +7,20 @@ pub struct Channel<T> {
     ready: AtomicBool,
 }
 
+impl<T> Channel<T> {
+    pub const fn new() -> Self {
+        Self {
+            message: UnsafeCell::new(MaybeUninit::uninit()),
+            ready: AtomicBool::new(false),
+        }
+    }
+
+    pub fn split<'a>(&'a mut self) -> (Sender<'a, T>, Receiver<'a, T>) {
+        *self = Self::new();
+        (Sender { channel: self }, Receiver { channel: self })
+    }
+}
+
 unsafe impl<T> Sync for Channel<T>
     where T: Send {}
 
