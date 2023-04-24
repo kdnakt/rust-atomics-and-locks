@@ -8,6 +8,7 @@ use std::sync::atomic::{
 };
 use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
+use std::thread;
 
 pub struct Channel<T> {
     message: UnsafeCell<MaybeUninit<T>>,
@@ -69,4 +70,20 @@ impl<T> Receiver<'_, T> {
 
 fn main() {
     println!("Hello, world!");
+
+    let mut channel = Channel::new();
+    thread::scope(|s| {
+        let (sender, receiver) = channel.split();
+        let t = thread::current();
+        s.spawn(move || {
+            sender.send("hello world");
+            t.unpark();
+        });
+        while !receiver.is_ready() {
+            thread::park();
+        }
+        let s = receiver.receive();
+        assert_eq!(s, "hello world");
+        println!("got: {s}");
+    });
 }
