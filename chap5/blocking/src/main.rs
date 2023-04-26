@@ -3,6 +3,7 @@ use std::sync::atomic::{
 };
 use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
+use std::thread;
 use std::thread::Thread;
 use std::marker::PhantomData;
 
@@ -20,6 +21,20 @@ impl<T> Channel<T> {
             message: UnsafeCell::new(MaybeUninit::uninit()),
             ready: AtomicBool::new(false),
         }
+    }
+
+    pub fn split<'a>(&'a mut self) -> (Sender<'a, T>, Receiver<'a, T>) {
+        *self = Self::new();
+        (
+            Sender {
+                channel: self,
+                receiving_thread: thread::current(),
+            },
+            Receiver {
+                channel: self,
+                _no_send: PhantomData,
+            }
+        )
     }
 }
 
