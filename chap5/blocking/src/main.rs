@@ -1,5 +1,6 @@
 use std::sync::atomic::{
     AtomicBool,
+    Ordering::Release,
 };
 use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
@@ -41,6 +42,15 @@ impl<T> Channel<T> {
 pub struct Sender<'a, T> {
     channel: &'a Channel<T>,
     receiving_thread: Thread,
+}
+
+impl<T> Sender<'_, T> {
+    pub fn send(self, message: T) {
+        unsafe { (*self.channel.message.get()).write(message) };
+        self.channel.ready.store(true, Release);
+        // New!
+        self.receiving_thread.unpark();
+    }
 }
 
 pub struct Receiver<'a, T> {
