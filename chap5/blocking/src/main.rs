@@ -82,4 +82,15 @@ impl<T> Receiver<'_, T> {
 
 fn main() {
     println!("Hello, world!");
+
+    let mut channel = Channel::new();
+    thread::scope(|s| {
+        let (sender, receiver) = channel.split();
+        s.spawn(move || {
+            sender.send("hello world");
+        });
+        let s = receiver.receive();
+        assert_eq!(s, "hello world");
+        println!("got: {s}");
+    });
 }
