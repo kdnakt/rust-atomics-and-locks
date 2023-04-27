@@ -42,6 +42,14 @@ impl<T> Channel<T> {
     }
 }
 
+impl<T> Drop for Channel<T> {
+    fn drop(&mut self) {
+        if *self.ready.get_mut() {
+            unsafe { self.message.get_mut().assume_init_drop() }
+        }
+    }
+}
+
 pub struct Sender<'a, T> {
     channel: &'a Channel<T>,
     receiving_thread: Thread,
