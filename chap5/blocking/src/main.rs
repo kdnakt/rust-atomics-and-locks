@@ -1,6 +1,9 @@
 use std::sync::atomic::{
     AtomicBool,
-    Ordering::Release,
+    Ordering::{
+        Acquire,
+        Release,
+    },
 };
 use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
@@ -58,6 +61,15 @@ pub struct Receiver<'a, T> {
     // raw pointer does not implement Send,
     // not allowing to be sent between threads.
     _no_send: PhantomData<*const ()>,
+}
+
+impl<T> Receiver<'_, T> {
+    pub fn receive(self) -> T {
+        while !self.channel.ready.swap(false, Acquire) {
+            thread::park();
+        }
+        unsafe { (*self.channel.message.get()).assume_init_read() }
+    }
 }
 
 fn main() {
