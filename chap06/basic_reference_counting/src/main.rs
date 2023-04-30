@@ -12,6 +12,9 @@ pub struct Arc<T> {
     ptr: NonNull<ArcData<T>>,
 }
 
+unsafe impl<T: Send + Sync> Send for Arc<T> {}
+unsafe impl<T: Send + Sync> Sync for Arc<T> {}
+
 fn main() {
     println!("Hello, world!");
 }
