@@ -15,6 +15,22 @@ pub struct Arc<T> {
 unsafe impl<T: Send + Sync> Send for Arc<T> {}
 unsafe impl<T: Send + Sync> Sync for Arc<T> {}
 
+impl<T> Arc<T> {
+    pub fn new(data: T) -> Arc<T> {
+        Arc {
+            ptr: NonNull::from( // turn it into a pointer
+                Box::leak( // give up our exclusive ownership
+                    // new allocation
+                    Box::new(ArcData {
+                        ref_count: AtomicUsize::new(1),
+                        data,
+                    })
+                )
+            ),
+        }
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
