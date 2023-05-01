@@ -29,6 +29,10 @@ impl<T> Arc<T> {
             ),
         }
     }
+
+    fn data(&self) -> &ArcData<T> {
+        unsafe { self.ptr.as_ref() }
+    }
 }
 
 fn main() {
