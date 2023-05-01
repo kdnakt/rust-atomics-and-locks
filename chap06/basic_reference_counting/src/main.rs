@@ -1,5 +1,6 @@
 use std::sync::atomic::AtomicUsize;
 use std::ptr::NonNull;
+use std::ops::Deref;
 
 struct ArcData<T> {
     ref_count: AtomicUsize,
@@ -32,6 +33,14 @@ impl<T> Arc<T> {
 
     fn data(&self) -> &ArcData<T> {
         unsafe { self.ptr.as_ref() }
+    }
+}
+
+impl<T> Deref for Arc<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.data().data
     }
 }
 
