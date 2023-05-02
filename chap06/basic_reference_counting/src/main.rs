@@ -36,6 +36,7 @@ impl<T> Arc<T> {
     }
 }
 
+// Arc represents shared ownership, so doesn't implement DerefMut
 impl<T> Deref for Arc<T> {
     type Target = T;
 
