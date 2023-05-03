@@ -1,7 +1,14 @@
 use std::sync::atomic::AtomicUsize;
 use std::ptr::NonNull;
 use std::ops::Deref;
-use std::sync::atomic::Ordering::Relaxed;
+use std::sync::atomic::{
+    fence,
+    Ordering::{
+        Acquire,
+        Relaxed,
+        Release,
+    },
+};
 
 struct ArcData<T> {
     ref_count: AtomicUsize,
@@ -55,6 +62,18 @@ impl<T> Clone for Arc<T> {
         }
         Arc {
             ptr: self.ptr,
+        }
+    }
+}
+
+impl<T> Drop for Arc<T> {
+    fn drop(&mut self) {
+        if self.data().ref_count.fetch_sub(1, Release) == 1 {
+            fence(Acquire);
+            unsafe {
+                // reclaim exclusive ownership with Box::from_raw()
+                drop(Box::from_raw(self.ptr.as_ptr()));
+            }
         }
     }
 }
