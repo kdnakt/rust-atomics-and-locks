@@ -48,6 +48,8 @@ impl<T> Deref for Arc<T> {
 
 impl<T> Clone for Arc<T> {
     fn clone(&self) -> Self {
+        // aborting the process is not instant, so we use usize::MAX / 2 as the limit
+        // it's impossible to have so many threads concurrently because they take space in memory
         if self.data().ref_count.fetch_add(1, Relaxed) > usize::MAX / 2 {
             std::process::abort();
         }
