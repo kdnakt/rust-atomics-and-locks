@@ -81,3 +81,32 @@ impl<T> Drop for Arc<T> {
 fn main() {
     println!("Hello, world!");
 }
+
+#[test]
+fn test_our_ark() {
+    static NUM_DROPS: AtomicUsize = AtomicUsize::new(0);
+    struct DetectDrop;
+    impl Drop for DetectDrop {
+        fn drop(&mut self) {
+            NUM_DROPS.fetch_add(1, Relaxed);
+        }
+    }
+
+    let x = Arc::new(("hello", DetectDrop));
+    let y = x.clone();
+
+    // send x to another thread and use it there
+    let t = std::thread::spawn(move || {
+        assert_eq!(x.0, "hello");
+    });
+    // in parallel, y should be still usable here
+    assert_eq!(y.0, "hello");
+    t.join().unwrap();
+
+    // x should be dropped by now
+    // but y is alive, so no drop should have happened.
+    assert_eq!(NUM_DROPS.load(Relaxed), 0);
+
+    drop(y);
+    assert_eq!(NUM_DROPS.load(Relaxed), 1);
+}
