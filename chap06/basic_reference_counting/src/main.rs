@@ -42,6 +42,18 @@ impl<T> Arc<T> {
     fn data(&self) -> &ArcData<T> {
         unsafe { self.ptr.as_ref() }
     }
+
+    /// called as Arc::get_mut(&mut a), not as a.get_mut()
+    pub fn get_mut(arc: &mut Self) -> Option<&mut T> {
+        if arc.data().ref_count.load(Relaxed) == 1 {
+            fence(Acquire);
+            // safety: nothing else can access tha data
+            // since there's only one Arc, to which we have exclusive access
+            unsafe { Some(&mut arc.ptr.as_mut().data) }
+        } else {
+            None
+        }
+    }
 }
 
 // Arc represents shared ownership, so doesn't implement DerefMut
