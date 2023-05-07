@@ -36,6 +36,12 @@ impl<T> Arc<T> {
     }
 }
 
+impl<T> Weak<T> {
+    fn data(&self) -> &ArcData<T> {
+        unsafe { self.ptr.as_ref() }
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
