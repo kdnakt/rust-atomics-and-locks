@@ -22,6 +22,20 @@ pub struct Weak<T> {
 unsafe impl<T: Sync + Send> Send for Weak<T> {}
 unsafe impl<T: Sync + Send> Sync for Weak<T> {}
 
+impl<T> Arc<T> {
+    pub fn new(data: T) -> Arc<T> {
+        Arc {
+            weak: Weak {
+                ptr: NonNull::from(Box::leak(Box::new(ArcData {
+                    alloc_ref_count: AtomicUsize::new(1),
+                    data_ref_count: AtomicUsize::new(1),
+                    data: UnsafeCell::new(Some(data)),
+                }))),
+            },
+        }
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
