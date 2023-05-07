@@ -1,6 +1,7 @@
 use std::sync::atomic::AtomicUsize;
 use std::cell::UnsafeCell;
 use std::ptr::NonNull;
+use std::ops::Deref;
 
 struct ArcData<T> {
     /// number of `Arc`s
@@ -33,6 +34,16 @@ impl<T> Arc<T> {
                 }))),
             },
         }
+    }
+}
+
+impl<T> Deref for Arc<T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        let ptr = self.weak.data().data.get();
+        // safety: since there's an Arc to the data,
+        // the data exists and may be shared
+        unsafe { (*ptr).as_ref().unwrap() }
     }
 }
 
