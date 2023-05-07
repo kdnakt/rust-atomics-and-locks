@@ -1,4 +1,7 @@
-use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::{
+    AtomicUsize,
+    Ordering::Relaxed,
+};
 use std::cell::UnsafeCell;
 use std::ptr::NonNull;
 use std::ops::Deref;
@@ -50,6 +53,15 @@ impl<T> Deref for Arc<T> {
 impl<T> Weak<T> {
     fn data(&self) -> &ArcData<T> {
         unsafe { self.ptr.as_ref() }
+    }
+}
+
+impl<T> Clone for Weak<T> {
+    fn clone(&self) -> Self {
+        if self.data().alloc_ref_count.fetch_add(1, Relaxed) > usize::MAX / 2 {
+            std::process::abort();
+        }
+        Weak { ptr: self.ptr }
     }
 }
 
