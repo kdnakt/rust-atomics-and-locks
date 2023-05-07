@@ -1,6 +1,11 @@
 use std::sync::atomic::{
+    fence,
     AtomicUsize,
-    Ordering::Relaxed,
+    Ordering::{
+        Acquire,
+        Relaxed,
+        Release,
+    },
 };
 use std::cell::UnsafeCell;
 use std::ptr::NonNull;
@@ -72,6 +77,17 @@ impl<T> Clone for Weak<T> {
             std::process::abort();
         }
         Weak { ptr: self.ptr }
+    }
+}
+
+impl<T> Drop for Weak<T> {
+    fn drop(&mut self) {
+        if self.data().alloc_ref_count.fetch_sub(1, Release) == 1 {
+            fence(Acquire);
+            unsafe {
+                drop(Box::from_raw(self.ptr.as_ptr()));
+            }
+        }
     }
 }
 
