@@ -50,6 +50,16 @@ impl<T> Deref for Arc<T> {
     }
 }
 
+impl<T> Clone for Arc<T> {
+    fn clone(&self) -> Self {
+        let weak = self.weak.clone();
+        if weak.data().data_ref_count.fetch_add(1, Relaxed) > usize::MAX / 2 {
+            std::process::abort();
+        }
+        Arc { weak }
+    }
+}
+
 impl<T> Weak<T> {
     fn data(&self) -> &ArcData<T> {
         unsafe { self.ptr.as_ref() }
