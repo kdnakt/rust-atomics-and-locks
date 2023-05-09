@@ -43,6 +43,24 @@ impl<T> Arc<T> {
             },
         }
     }
+
+    pub fn get_mut(arc: &mut Self) -> Option<&mut T> {
+        if arc.weak.data().alloc_ref_count.load(Relaxed) == 1 {
+            fence(Acquire);
+            // safety: nothing else can access the data,
+            // since there's only one Arc,
+            // to which we have exclusive access and no weak pointers
+            let arcdata = unsafe { arc.weak.ptr.as_mut() };
+            let option = arcdata.data.get_mut();
+
+            // we know the data is still available
+            // since we have an Arc to it, so this won't panic
+            let data = option.as_mut().unwrap();
+            Some(data)
+        } else {
+            None
+        }
+    }
 }
 
 impl<T> Deref for Arc<T> {
