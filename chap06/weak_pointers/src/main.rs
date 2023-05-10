@@ -87,6 +87,20 @@ impl<T> Clone for Arc<T> {
     }
 }
 
+impl<T> Drop for Arc<T> {
+    fn drop(&mut self) {
+        if self.weak.data().data_ref_count.fetch_sub(1, Release) == 1 {
+            fence(Acquire);
+            let ptr = self.weak.data().data.get();
+            // safety: the data reference counter is zero,
+            // so nothing will access it.
+            unsafe {
+                (*ptr) = None;
+            }
+        }
+    }
+}
+
 impl<T> Weak<T> {
     fn data(&self) -> &ArcData<T> {
         unsafe { self.ptr.as_ref() }
