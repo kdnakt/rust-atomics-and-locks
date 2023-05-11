@@ -29,6 +29,19 @@ impl<T> Arc<T> {
             }))),
         }
     }
+
+    fn data(&self) -> &ArcData<T> {
+        unsafe { self.ptr.as_ref() }
+    }
+}
+
+impl<T> Deref for Arc<T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        // Safety: since there's an Arc to the data,
+        // the data exists and may be shared.
+        unsafe { &*self.data().data.get() }
+    }
 }
 
 pub struct Weak<T> {
