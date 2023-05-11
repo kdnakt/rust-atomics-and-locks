@@ -145,6 +145,18 @@ impl<T> Drop for Weak<T> {
     }
 }
 
+fn annoying(mut arc: Arc<String>) {
+    loop {
+        let weak = Arc::downgrade(&arc);
+        drop(arc);
+        println!("I have no Arc!");
+
+        arc = weak.upgrade().unwrap();
+        drop(weak);
+        println!("I have no Weak!");
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
