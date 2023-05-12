@@ -1,7 +1,16 @@
-use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::{
+    fence,
+    AtomicUsize,
+    Ordering::{
+        Acquire,
+        Relaxed,
+        Release,
+    },
+};
 use std::cell::UnsafeCell;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
+use std::ops::Deref;
 
 struct ArcData<T> {
     /// number of `Arc`s
@@ -21,8 +30,8 @@ unsafe impl<T: Sync + Send> Sync for Arc<T> {}
 
 impl<T> Arc<T> {
     pub fn new(data: T) -> Arc<T> {
-        Art {
-            ptr: NonNull::new(Box::leak(Box::new(ArcData {
+        Arc {
+            ptr: NonNull::from(Box::leak(Box::new(ArcData {
                 alloc_ref_count: AtomicUsize::new(1),
                 data_ref_count: AtomicUsize::new(1),
                 data: UnsafeCell::new(ManuallyDrop::new(data)),
@@ -50,6 +59,32 @@ pub struct Weak<T> {
 
 unsafe impl<T: Sync + Send> Send for Weak<T> {}
 unsafe impl<T: Sync + Send> Sync for Weak<T> {}
+
+impl<T> Weak<T> {
+    fn data(&self) -> &ArcData<T> {
+        unsafe { self.ptr.as_ref() }
+    }
+}
+
+impl<T> Clone for Weak<T> {
+    fn clone(&self) -> Self {
+        if self.data().alloc_ref_count.fetch_add(1, Relaxed) > usize::MAX / 2 {
+            std::process::abort();
+        }
+        Weak { ptr: self.ptr }
+    }
+}
+
+impl<T> Drop for Weak<T> {
+    fn drop(&mut self) {
+        if self.data().alloc_ref_count.fetch_sub(1, Release) == 1 {
+            fence(Acquire);
+            unsafe {
+                drop(Box::from_raw(self.ptr.as_ptr()));
+            }
+        }
+    }
+}
 
 fn main() {
     println!("Hello, world!");
