@@ -53,6 +53,15 @@ impl<T> Deref for Arc<T> {
     }
 }
 
+impl<T> Clone for Arc<T> {
+    fn clone(&self) -> Self {
+        if self.data().data_ref_count.fetch_add(1, Relaxed) > usize::MAX / 2 {
+            std::process::abort();
+        }
+        Arc { ptr: self.ptr }
+    }
+}
+
 pub struct Weak<T> {
     ptr: NonNull<ArcData<T>>,
 }
