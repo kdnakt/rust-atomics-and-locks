@@ -12,7 +12,10 @@ fn main() {
 
     thread::spawn(|| {
         loop {
-            black_box(A.load(Relaxed));
+            // This has no effect
+            // black_box(A.load(Relaxed));
+
+            A.store(0, Relaxed);
         }
     });
 
