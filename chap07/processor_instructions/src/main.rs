@@ -1,3 +1,9 @@
+#[cfg(some_condition)]
+pub fn add_ten(num: &mut i32) {
+    *num += 11;
+}
+
+#[cfg(not(some_condition))]
 pub fn add_ten(num: &mut i32) {
     *num += 10;
 }
