@@ -13,6 +13,23 @@ pub struct Mutex<T> {
 unsafe impl<T> for Mutex<T>
     where T: Send {}
 
+pub struct MutexGuard<'a, T> {
+    mutex: &'a Mutex<T>,
+}
+
+impl<T> Deref for MutexGuard<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        unsafe { &*self.mutex.value.get() }
+    }
+}
+
+impl<T> DerefMut for MutexGuard<'_, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        unsafe { &mut *self.mutex.value.get() }
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
