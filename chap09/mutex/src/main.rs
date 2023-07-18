@@ -13,6 +13,15 @@ pub struct Mutex<T> {
 unsafe impl<T> for Mutex<T>
     where T: Send {}
 
+impl<T> Mutex<T> {
+    pub const fn new(value: T) -> Self {
+        Self {
+            state: AtomicU32::new(0), // unlocked state
+            value: UnsafeCell::new(value),
+        }
+    }
+}
+
 pub struct MutexGuard<'a, T> {
     mutex: &'a Mutex<T>,
 }
