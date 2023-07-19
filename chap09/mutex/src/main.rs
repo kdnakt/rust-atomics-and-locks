@@ -1,9 +1,13 @@
-use std::sync::atomic::AtomicU32;
+use std::sync::atomic::{
+    AtomicU32,
+    Ordering::Acquire,
+};
 use std::cell::UnsafeCell;
 use std::ops::{
     Deref,
     DerefMut,
 };
+use atomic_wait::wait;
 
 // type definition for our Mutex
 pub struct Mutex<T> {
@@ -23,6 +27,16 @@ impl<T> Mutex<T> {
             state: AtomicU32::new(0), // unlocked state
             value: UnsafeCell::new(value),
         }
+    }
+
+    pub fn lock(&self) -> MutexGuard<T> {
+        // set the state to 1: locked.
+        while self.state.swap(1, Acquire) == 1 {
+            // If it was already locked..
+            //.. wait, unless the state is no longer 1.
+            wait(&self.state, 1);
+        }
+        MutexGuard { mutex: self }
     }
 }
 
