@@ -1,5 +1,9 @@
 use std::sync::atomic::AtomicU32;
 use std::cell::UnsafeCell;
+use std::ops::{
+    Deref,
+    DerefMut,
+};
 
 // type definition for our Mutex
 pub struct Mutex<T> {
@@ -10,7 +14,7 @@ pub struct Mutex<T> {
     value: UnsafeCell<T>,
 }
 
-unsafe impl<T> for Mutex<T>
+unsafe impl<T> Sync for Mutex<T>
     where T: Send {}
 
 impl<T> Mutex<T> {
