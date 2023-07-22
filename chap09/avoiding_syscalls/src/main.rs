@@ -2,6 +2,7 @@ use std::sync::atomic::{
     AtomicU32,
     Ordering::{
         Acquire,
+        Relaxed,
         Release,
     },
 };
@@ -23,6 +24,27 @@ pub struct Mutex<T> {
     value: UnsafeCell<T>,
 }
 
+unsafe impl<T> Sync for Mutex<T>
+    where T: Send {}
+
+impl<T> Mutex<T> {
+    pub const fn new(value: T) -> Self {
+        Self {
+            state: AtomicU32::new(0), // unlocked state
+            value: UnsafeCell::new(value),
+        }
+    }
+
+    pub fn lock(&self) -> MutexGuard<T> {
+        if self.state.compare_exchange(0, 1, Acquire, Relaxed).is_err() {
+            while self.state.swap(2, Acquire) != 0 {
+                wait(&self.state, 2);
+            }
+        }
+        MutexGuard { mutex: self }
+    }
+}
+
 pub struct MutexGuard<'a, T> {
     mutex: &'a Mutex<T>,
 }
@@ -42,10 +64,9 @@ impl<T> DerefMut for MutexGuard<'_, T> {
 
 impl<T> Drop for MutexGuard<'_, T> {
     fn drop(&mut self) {
-        // Set the state back to 0: unlocked
-        self.mutex.state.store(0, Release);
-        // Wake up one of the waiting threads, if any.
-        wake_one(&self.mutex.state);
+        if self.mutex.state.swap(0, Release) == 2 {
+            wake_one(&self.mutex.state);
+        }
     }
 }
 
