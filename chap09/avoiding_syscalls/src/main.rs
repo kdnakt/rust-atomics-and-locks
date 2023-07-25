@@ -94,7 +94,9 @@ impl<T> Drop for MutexGuard<'_, T> {
 fn main() {
     println!("Hello, world!");
 
-    // benchmarking
+    // benchmarking:
+    // Debug mode on M1 MacBook Pro, 119.274708ms
+    // Release mode on M1 MacBook Pro, 44.6345ms
     let m = Mutex::new(0);
     std::hint::black_box(&m);
 
