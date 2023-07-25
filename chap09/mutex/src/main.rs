@@ -14,6 +14,7 @@ use atomic_wait::{
     wait,
     wake_one,
 };
+use std::time::Instant;
 
 // type definition for our Mutex
 pub struct Mutex<T> {
@@ -74,4 +75,17 @@ impl<T> Drop for MutexGuard<'_, T> {
 
 fn main() {
     println!("Hello, world!");
+
+    // benchmarking:
+    // Debug mode on M1 MacBook Pro, 94.692ms
+    // Release mode on M1 MacBook Pro, 38.101958ms
+    let m = Mutex::new(0);
+    std::hint::black_box(&m);
+
+    let start = Instant::now();
+    for _ in 0..5_000_000 {
+        *m.lock() += 1;
+    }
+    let duration = start.elapsed();
+    println!("locked {} times in {:?}", *m.lock(), duration);
 }
