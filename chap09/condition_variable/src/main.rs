@@ -2,7 +2,10 @@ use std::sync::atomic::{
     AtomicU32,
     Ordering::Relaxed,
 };
-use atomic_wait::wake_one;
+use atomic_wait::{
+    wake_one,
+    wake_all,
+};
 
 pub struct Condvar {
     counter: AtomicU32,
@@ -16,6 +19,11 @@ impl Condvar {
     pub fn notify_one(&self) {
         self.counter.fetch_add(1, Relaxed);
         wake_one(&self.counter);
+    }
+
+    pub fn notify_all(&self) {
+        self.counter.fetch_add(1, Relaxed);
+        wake_all(&self.counter);
     }
 }
 
