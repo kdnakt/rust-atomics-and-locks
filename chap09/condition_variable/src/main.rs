@@ -110,6 +110,20 @@ impl Condvar {
         self.counter.fetch_add(1, Relaxed);
         wake_all(&self.counter);
     }
+
+    pub fn wait<'a, T>(&self, guard: MutexGuard<'a, T>) -> MutexGuard<'a, T> {
+        let counter_value = self.counter.load(Relaxed);
+
+        // Unlock the mutex by dropping the guard,
+        // but remember the mutex so we can lock it again later.
+        let mutex = guard.mutex;
+        drop(guard);
+
+        // wait, but only if the counter hasn't changed since unlocking.
+        wait(&self.counter, counter_value);
+
+        mutex.lock()
+    }
 }
 
 fn main() {
