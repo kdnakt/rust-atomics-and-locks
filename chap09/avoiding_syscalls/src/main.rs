@@ -1,5 +1,6 @@
 use std::sync::atomic::{
     AtomicU32,
+    AtomicUsize,
     Ordering::{
         Acquire,
         Relaxed,
@@ -89,6 +90,11 @@ impl<T> Drop for MutexGuard<'_, T> {
             wake_one(&self.mutex.state);
         }
     }
+}
+
+pub struct Condvar {
+    counter: AtomicU32,
+    num_waiters: AtomicUsize, // New!
 }
 
 fn main() {
