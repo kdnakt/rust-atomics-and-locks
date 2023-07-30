@@ -16,7 +16,11 @@ use atomic_wait::{
     wake_one,
     wake_all,
 };
-use std::time::Instant;
+use std::time::{
+    Instant,
+    Duration,
+};
+use std::thread;
 
 pub struct Mutex<T> {
     /// 0: unlocked
@@ -128,4 +132,32 @@ impl Condvar {
 
 fn main() {
     println!("Hello, world!");
+}
+
+#[test]
+fn test_condvar() {
+    let mutex = Mutex::new(0);
+    let condvar = Condvar::new();
+
+    let mut wakeups = 0;
+
+    thread::scope(|s| {
+        s.spawn(|| {
+            thread::sleep(Duration::from_secs(1));
+            *mutex.lock() = 123;
+            condvar.notify_one();
+        });
+
+        let mut m = mutex.lock();
+        while *m < 100 {
+            m = condvar.wait(m);
+            wakeups += 1;
+        }
+
+        assert_eq!(*m, 123);
+    });
+
+    // Check that the main thread actually did wait (not busy-loop),
+    // while still allowing for a few spurious wake ups.
+    assert!(wakeups < 10);
 }
