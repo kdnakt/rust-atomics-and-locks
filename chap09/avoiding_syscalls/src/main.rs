@@ -104,6 +104,13 @@ impl Condvar {
             num_waiters: AtomicUsize::new(0), // New!
         }
     }
+
+    pub fn notify_one(&self) {
+        if self.num_waiters.load(Relaxed) > 0 { // New!
+            self.counter.fetch_add(1, Relaxed);
+            wake_one(&self.counter);
+        }
+    }
 }
 
 fn main() {
