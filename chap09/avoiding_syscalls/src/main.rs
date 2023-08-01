@@ -97,6 +97,15 @@ pub struct Condvar {
     num_waiters: AtomicUsize, // New!
 }
 
+impl Condvar {
+    pub const fn new() -> Self {
+        Self {
+            counter: AtomicU32::new(0),
+            num_waiters: AtomicUsize::new(0), // New!
+        }
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 
