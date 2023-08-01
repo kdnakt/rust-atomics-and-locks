@@ -15,6 +15,7 @@ use std::ops::{
 use atomic_wait::{
     wait,
     wake_one,
+    wake_all,
 };
 use std::time::Instant;
 
@@ -109,6 +110,13 @@ impl Condvar {
         if self.num_waiters.load(Relaxed) > 0 { // New!
             self.counter.fetch_add(1, Relaxed);
             wake_one(&self.counter);
+        }
+    }
+
+    pub fn notify_all(&self) {
+        if self.num_waiters.load(Relaxed) > 0 { // New!
+            self.counter.fetch_add(1, Relaxed);
+            wake_all(&self.counter);
         }
     }
 }
