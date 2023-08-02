@@ -119,6 +119,21 @@ impl Condvar {
             wake_all(&self.counter);
         }
     }
+
+    pub fn wait<'a, T>(&self, guard: MutexGuard<'a, T>) -> MutexGuard<'a, T> {
+        self.num_waiters.fetch_add(1, Relaxed); // New!
+
+        let counter_value = self.counter.load(Relaxed);
+
+        let mutex = guard.mutex;
+        drop(guard);
+
+        wait(&self.counter, counter_value);
+
+        self.num_waiters.fetch_sub(1, Relaxed); // New!
+
+        mutex.lock()
+    }
 }
 
 fn main() {
