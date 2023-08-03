@@ -7,6 +7,9 @@ pub struct RwLock<T> {
     value: UnsafeCell<T>,
 }
 
+unsafe impl<T> Sync for RwLock<T>
+    where T: Send + Sync {}
+
 fn main() {
     println!("Hello, world!");
 }
