@@ -19,6 +19,14 @@ impl<T> RwLock<T> {
     }
 }
 
+pub struct ReadGuard<'a, T> {
+    rwlock: &'a RwLock<T>,
+}
+
+pub struct WriteGuard<'a, T> {
+    rwlock: &'a RwLock<T>,
+}
+
 fn main() {
     println!("Hello, world!");
 }
