@@ -47,6 +47,16 @@ impl<T> RwLock<T> {
             }
         }
     }
+
+    pub fn write(&self) -> WriteGuard<T> {
+        while let Err(s) = self.state.compare_exchange(
+            0, u32::MAX, Acquire, Relaxed
+        ) {
+            // Wait while already locked.
+            wait(&self.state, s);
+        }
+        WriteGuard { rwlock: self }
+    }
 }
 
 pub struct ReadGuard<'a, T> {
