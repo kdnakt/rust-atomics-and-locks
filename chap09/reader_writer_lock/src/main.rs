@@ -14,6 +14,7 @@ use std::ops::{
 use atomic_wait::{
     wait,
     wake_one,
+    wake_all,
 };
 
 pub struct RwLock<T> {
@@ -97,6 +98,14 @@ impl<T> Deref for WriteGuard<'_, T> {
 impl<T> DerefMut for WriteGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
         unsafe { &mut *self.rwlock.value.get() }
+    }
+}
+
+impl<T> Drop for WriteGuard<'_, T> {
+    fn drop(&mut self) {
+        self.rwlock.state.store(0, Release);
+        // Wake up all waiting readers and writers.
+        wake_all(&self.rwlock.state);
     }
 }
 
