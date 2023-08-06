@@ -3,6 +3,7 @@ use std::sync::atomic::{
     Ordering::{
         Acquire,
         Relaxed,
+        Release,
     }
 };
 use std::cell::UnsafeCell;
@@ -10,7 +11,10 @@ use std::ops::{
     Deref,
     DerefMut,
 };
-use atomic_wait::wait;
+use atomic_wait::{
+    wait,
+    wake_one,
+};
 
 pub struct RwLock<T> {
     /// The number of readers, or u32::MAX if write-locked.
@@ -67,6 +71,15 @@ impl<T> Deref for ReadGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {
         unsafe { &*self.rwlock.value.get() }
+    }
+}
+
+impl<T> Drop for ReadGuard<'_, T> {
+    fn drop(&mut self) {
+        if self.rwlock.state.fetch_sub(1, Release) == 1 {
+            // Wake up a waiting writer, if any.
+            wake_one(&self.rwlock.state);
+        }
     }
 }
 
