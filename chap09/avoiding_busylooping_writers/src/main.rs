@@ -19,6 +19,51 @@ impl<T> RwLock<T> {
     }
 }
 
+pub struct ReadGuard<'a, T> {
+    rwlock: &'a RwLock<T>,
+}
+
+impl<T> Deref for ReadGuard<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        unsafe { &*self.rwlock.value.get() }
+    }
+}
+
+impl<T> Drop for ReadGuard<'_, T> {
+    fn drop(&mut self) {
+        if self.rwlock.state.fetch_sub(1, Release) == 1 {
+            // Wake up a waiting writer, if any.
+            wake_one(&self.rwlock.state);
+        }
+    }
+}
+
+pub struct WriteGuard<'a, T> {
+    rwlock: &'a RwLock<T>,
+}
+
+impl<T> Deref for WriteGuard<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        unsafe { &*self.rwlock.value.get() }
+    }
+}
+
+impl<T> DerefMut for WriteGuard<'_, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        unsafe { &mut *self.rwlock.value.get() }
+    }
+}
+
+impl<T> Drop for WriteGuard<'_, T> {
+    fn drop(&mut self) {
+        self.rwlock.state.store(0, Release);
+        // Wake up all waiting readers and writers.
+        wake_all(&self.rwlock.state);
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
