@@ -53,6 +53,19 @@ impl<T> RwLock<T> {
         }
     }
 
+    pub fn write(&self) -> WriteGuard<T> {
+        while self.state.compare_exchange(
+            0, u32::MAX, Acquire, Relaxed
+        ).is_err() {
+            let w = self.writer_wake_counter.load(Acquire);
+            if self.state.load(Relaxed) != 0 {
+                // Wait if the RwLock is still locked,
+                // but only if there have been no wake signals since we checked.
+                wait(&self.writer_wake_counter, w);
+            }
+        }
+        WriteGuard { rwlock: self }
+    }
 }
 
 pub struct ReadGuard<'a, T> {
