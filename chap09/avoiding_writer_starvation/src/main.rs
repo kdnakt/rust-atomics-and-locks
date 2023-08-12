@@ -103,9 +103,13 @@ impl<T> Deref for ReadGuard<'_, T> {
 
 impl<T> Drop for ReadGuard<'_, T> {
     fn drop(&mut self) {
-        if self.rwlock.state.fetch_sub(1, Release) == 1 {
-            self.rwlock.writer_wake_counter.fetch_add(1, Release); // New!
-            wake_one(&self.rwlock.writer_wake_counter); // Changed!
+        // Decrement the state by 2 to remove one read-lock
+        if self.rwlock.state.fetch_sub(2, Release) == 3 {
+            // If we decremented from 3 to 1,
+            // that means the RwLock is now unlocked
+            // and there's a waiting writer, which we wake up.
+            self.rwlock.writer_wake_counter.fetch_add(1, Release);
+            wake_one(&self.rwlock.writer_wake_counter);
         }
     }
 }
