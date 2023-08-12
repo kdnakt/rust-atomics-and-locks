@@ -59,17 +59,34 @@ impl<T> RwLock<T> {
     }
 
     pub fn write(&self) -> WriteGuard<T> {
-        while self.state.compare_exchange(
-            0, u32::MAX, Acquire, Relaxed
-        ).is_err() {
+        let mut s = self.state.load(Relaxed);
+        loop {
+            // Try to lock if unlocked.
+            if s <= 1 {
+                match self.state.compare_exchange(
+                    s, u32::MAX, Acquire, Relaxed
+                ) {
+                    Ok(_) => return WriteGuard { rwlock: self },
+                    Err(e) => { s = e; continue; }
+                }
+            }
+            // Block new readers, by making sure the state is odd.
+            if s % 2 == 0 {
+                match self.state.compare_exchange(
+                    s, s + 1, Relaxed, Relaxed
+                ) {
+                    Ok(_) => {},
+                    Err(e) => { s = e; continue; }
+                }
+            }
+            // Wait, if it's still locked
             let w = self.writer_wake_counter.load(Acquire);
-            if self.state.load(Relaxed) != 0 {
-                // Wait if the RwLock is still locked,
-                // but only if there have been no wake signals since we checked.
+            s = self.state.load(Relaxed);
+            if s >= 2 {
                 wait(&self.writer_wake_counter, w);
+                s = self.state.load(Relaxed);
             }
         }
-        WriteGuard { rwlock: self }
     }
 }
 
