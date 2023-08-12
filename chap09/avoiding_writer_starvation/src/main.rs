@@ -134,9 +134,9 @@ impl<T> DerefMut for WriteGuard<'_, T> {
 impl<T> Drop for WriteGuard<'_, T> {
     fn drop(&mut self) {
         self.rwlock.state.store(0, Release);
-        self.rwlock.writer_wake_counter.fetch_add(1, Release); //New!
+        self.rwlock.writer_wake_counter.fetch_add(1, Release);
         // wake one waiting writer
-        wake_one(&self.rwlock.writer_wake_counter); // New!
+        wake_one(&self.rwlock.writer_wake_counter);
         // Wake up all waiting readers.
         wake_all(&self.rwlock.state);
     }
