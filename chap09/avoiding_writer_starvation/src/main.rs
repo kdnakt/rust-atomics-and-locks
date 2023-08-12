@@ -1,5 +1,21 @@
-use std::sync::atomic::AtomicU32;
+use std::sync::atomic::{
+    AtomicU32,
+    Ordering::{
+        Acquire,
+        Relaxed,
+        Release,
+    },
+};
 use std::cell::UnsafeCell;
+use atomic_wait::{
+    wait,
+    wake_one,
+    wake_all,
+};
+use std::ops::{
+    Deref,
+    DerefMut,
+};
 
 pub struct RwLock<T> {
     /// The number of read locks times two,
@@ -26,17 +42,17 @@ impl<T> RwLock<T> {
     pub fn read(&self) -> ReadGuard<T> {
         let mut s = self.state.load(Relaxed);
         loop {
-            if s < u32::MAX {
-                assert!(s < u32::MAX - 1, "too many readers");
+            if s % 2 == 0 { // Even.
+                assert!(s < u32::MAX - 2, "too many readers");
                 match self.state.compare_exchange_weak(
-                    s, s + 1, Acquire, Relaxed
+                    s, s + 2, Acquire, Relaxed
                 ) {
                     Ok(_) => return ReadGuard { rwlock: self },
                     Err(e) => s = e,
                 }
             }
-            if s == u32::MAX {
-                wait(&self.state, u32::MAX);
+            if s % 2 == 1 { // Odd.
+                wait(&self.state, s);
                 s = self.state.load(Relaxed);
             }
         }
